@@ -11,7 +11,8 @@ namespace SqlIntro
             var repo = new ProductRepository(connectionString);
             foreach (var prod in repo.GetProducts())
             {
-                Console.WriteLine("Modified Date:" + prod.ModifiedDate.ToLongDateString() + " ");
+                Console.WriteLine(
+                    "Product Name:" + prod.Name + "");
             }
 
            

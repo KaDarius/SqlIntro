@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -9,13 +11,15 @@ using MySql.Data.MySqlClient;
 
 namespace SqlIntro
 {
-    public class ProductRepository
+    public class ProductRepository : IDisposable
     {
-        private readonly string _connectionString;
+        private readonly IDbConnection _conn;
 
-        public ProductRepository(string connectionString)
+
+        public ProductRepository(IDbConnection conn)
         {
-            _connectionString = connectionString;
+            _conn = conn;
+            _conn.Open();
         }
         /// <summary>
         /// Reads all the products from the products table
@@ -23,53 +27,47 @@ namespace SqlIntro
         /// <returns></returns>
         public IEnumerable<Product> GetProducts()
         {
-            using (var conn = new MySqlConnection(_connectionString))
-            {
-                conn.Open();
-                var cmd = conn.CreateCommand();
-                cmd.CommandText = "select * from product"; //TODO:  Write a SELECT statement that gets all products
+                var cmd = _conn.CreateCommand();
+                cmd.CommandText = "select name, color from product where productId = 2";
                 var dr = cmd.ExecuteReader();
                 while (dr.Read())
                 {
-                    yield return new Product { ModifiedDate = (DateTime) dr["ModifiedDate"]};
+                    yield return new Product
+                    {
+                        Name = dr["Name"].ToString(),
+                        ProductId = (int)dr["ProductId"],
+                        Color = dr["Color"].ToString()
+
+                    };
                 }
-            }
         }
 
         /// <summary>
         /// Deletes a Product from the database
         /// </summary>
         /// <param name="id"></param>
-        public void DeleteProduct(int id)
+        public void DeleteProduct(int ProductId)
         {
-            using (var conn = new MySqlConnection(_connectionString))
-            {
-                conn.Open();
-                var cmd = conn.CreateCommand();
-                cmd.CommandText = "Delete from ProductID"; //Write a delete statement that deletes by id
+                var cmd = _conn.CreateCommand();
+                cmd.CommandText = "Delete from product where Productid = 2 "; //Write a delete statement that deletes by id
+                cmd.AddParam("id", ProductId);
                 cmd.ExecuteNonQuery();
 
-                conn.Open();
-                cmd.CommandText = "Insert from ModifiedDate"; //grabbing date & time
-            }
         }
+
+        
+    
         /// <summary>
         /// Updates the Product in the database
         /// </summary>
         /// <param name="prod"></param>
         public void UpdateProduct(Product prod)
         {
-            //This is annoying and unnecessarily tedious for large objects.
-            //More on this in the future...  Nothing to do here..
-            using (var conn = new MySqlConnection(_connectionString))
-            {
-                conn.Open();
-                var cmd = conn.CreateCommand();
-                cmd.CommandText = "update product set name = @name where id = @id";
-                cmd.Parameters.AddWithValue("@name", prod.Name);
-                cmd.Parameters.AddWithValue("@id", prod.Id);
+                var cmd = _conn.CreateCommand();
+                cmd.CommandText = "update product set color = 'yellow' where productId = 2";
+                cmd.Parameters.AddWithValue("name", prod.Name);
+                cmd.Parameters.AddWithValue("id", prod.ProductId);
                 cmd.ExecuteNonQuery();
-            }
         }
         /// <summary>
         /// Inserts a new Product into the database
@@ -77,14 +75,15 @@ namespace SqlIntro
         /// <param name="prod"></param>
         public void InsertProduct(Product prod)
         {
-            using (var conn = new MySqlConnection(_connectionString))
-            {
-                conn.Open();
-                var cmd = conn.CreateCommand();
+                var cmd = _conn.CreateCommand();
                 cmd.CommandText = "INSERT into product (name) values(@name)";
                 cmd.Parameters.AddWithValue("@name", prod.Name);
                 cmd.ExecuteNonQuery();
-            }
+        }
+
+        public void Dispose()
+        {
+            _conn?.Dispose();
         }
     }
 }
