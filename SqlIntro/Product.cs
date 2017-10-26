@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Globalization;
+using System.Collections.Generic;
 
 namespace SqlIntro
 {
@@ -20,9 +20,22 @@ namespace SqlIntro
         public DateTime ModifiedDate { get; set; }
         public DateTime SellStartDate { get; set; }
 
-        public Product()
+        public Dictionary<string, object> Params => new Dictionary<string, object>
         {
-            RowGuid = Guid.NewGuid();
-        }
+            {"RowGuid", "blob"},
+            {"Name", Name},
+            {"ProductNumber", ProductNumber},
+            {"ListPrice", ListPrice},
+            {"MakeFlag", MakeFlag},
+            {"FinishedGoodsFlag", FinishedGoodsFlag},
+            {"Color", Color},
+            {"SafetyStockLevel", SafetyStockLevel},
+            {"ReorderPoint", ReorderPoint},
+            {"DaysToManufacture", DaysToManufacture},
+            {"StandardCost", StandardCost},
+            {"ModifiedDate", ModifiedDate},
+            {"SellStartDate", SellStartDate}
+        };
     }
+
 }
